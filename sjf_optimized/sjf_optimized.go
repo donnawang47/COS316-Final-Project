@@ -1,4 +1,4 @@
-package sjf
+package sjf_optimized
 
 type Process struct {
 	id          int
@@ -6,6 +6,7 @@ type Process struct {
 	burstTime   int // estimate of how long job takes
 	// execution time = arrivaltime + bursttime
 	waitingTime int
+	priority    int
 }
 
 type SJF struct {
@@ -33,11 +34,10 @@ func (sjf *SJF) run(process *Process, currentTime int) {
 
 	//queue = append(queue, Process{id = processId, burstTime = burstTime, arrivalTime = arrivalTime})
 
-	// index 0 = smallest burst time
-	// 0 1 2 3        2
-	// 0 2 4 5 -- 0 2 2 4 5
-	// insert 3 -> 0 2 3 4 5
-	// insert a process if there is a process
+	for _, v := range sjf.queue { //increment priority
+		sjf.processes[v.id].priority += 1
+		v.priority += 1
+	} //process := Process{id = processId, burstTime = burstTime, arrivalTime=arrivalTime}
 
 	if process != nil {
 		//process := Process{id = processId, burstTime = burstTime, arrivalTime=arrivalTime}
@@ -45,6 +45,7 @@ func (sjf *SJF) run(process *Process, currentTime int) {
 		sjf.processes[process.id] = process
 
 		found := false
+
 		for i := 0; i < len(sjf.queue); i++ {
 			if sjf.queue[i].burstTime > process.burstTime {
 				found = true
@@ -68,11 +69,27 @@ func (sjf *SJF) run(process *Process, currentTime int) {
 	// (0,1), (1,1), (1,2)
 
 	if sjf.remainingTime == 0 {
+
 		if len(sjf.queue) == 0 {
 			sjf.processId = -1
 		} else {
+			THRESHOLD := 2
+			maxProcess := sjf.queue[0]
+			maxId := -1
+			for i := 0; i < len(sjf.queue); i++ {
+				if maxProcess.priority < sjf.processes[sjf.queue[i].id].priority && sjf.processes[sjf.queue[i].id].priority >= THRESHOLD {
+					maxProcess = *sjf.processes[sjf.queue[i].id]
+					maxId = i
+				}
+			}
 			nextJob := sjf.queue[0]
-			sjf.queue = sjf.queue[1:] //pop from queue
+			if maxId != -1 {
+				nextJob = sjf.queue[maxId]
+				sjf.queue = append(sjf.queue[:maxId], sjf.queue[maxId+1:]...)
+			} else {
+				sjf.queue = sjf.queue[1:] //pop from queue
+			}
+
 			sjf.processId = nextJob.id
 			sjf.remainingTime = nextJob.burstTime
 			waitingTime := currentTime - nextJob.arrivalTime // nextJob.arrivalTime = start time of next job
@@ -85,8 +102,6 @@ func (sjf *SJF) run(process *Process, currentTime int) {
 	}
 
 	sjf.remainingTime--
-
-	//
 
 }
 
@@ -102,7 +117,3 @@ func (sjf *SJF) getAvgWaitingTIme() float32 {
 func (sjf *SJF) getProcessWaitingTime(processId int) int {
 	return sjf.processes[processId].waitingTime
 }
-
-// func Scheduling(stream){
-
-// }

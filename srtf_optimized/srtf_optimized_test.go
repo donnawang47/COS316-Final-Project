@@ -1,26 +1,26 @@
-package sjf
+package srtf
 
 import (
 	"testing"
 )
 
-// func TestSJF(t *testing.T) {
-func TestSJF(t *testing.T) {
-	sjf := NewSJF()
+// func Testsrtf(t *testing.T) {
+func TestSRTF(t *testing.T) {
+	srtf := NewSRTF()
 
 	// testcase := []int{3, 2, -1, 5, 3, -1, -1, -1, -1, -1, 1, -1, -1, -1, -1}
-	testcase := []int{5, 5, 1, 1, 1, 1, 1, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}
+	testcase := []int{5, 1, 1, 1, 1, 1, 1, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}
 
 	for i := 0; i < len(testcase); i++ {
 		//i is arrival time, testcase[i] is bursttime
 		// completion time - arrival time
 		// startime - arrival time
 		if testcase[i] == -1 {
-			sjf.run(nil, i)
+			srtf.run(nil, i)
 		} else {
-			sjf.run(&Process{id: i, arrivalTime: i, burstTime: testcase[i]}, i)
+			srtf.run(&Process{id: i, arrivalTime: i, burstTime: testcase[i], waitingTime: -1}, i)
 		}
-		t.Errorf("%d", sjf.getProcess())
+		t.Errorf("%d", srtf.getProcess())
 
 	}
 
@@ -29,10 +29,10 @@ func TestSJF(t *testing.T) {
 		// completion time - arrival time
 		// startime - arrival time
 		if testcase[i] != -1 {
-			t.Errorf("%d, %d:", i, sjf.getProcessWaitingTime(i))
+			t.Errorf("%d, %d", i, srtf.getProcessWaitingTime(i))
 		}
 
 	}
 
-	t.Errorf("avg waiting time: %f", sjf.getAvgWaitingTIme())
+	t.Errorf("avg waiting time: %f", srtf.getAvgWaitingTIme())
 }

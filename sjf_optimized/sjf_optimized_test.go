@@ -1,14 +1,15 @@
-package sjf
+package sjf_optimized
 
 import (
 	"testing"
 )
 
 // func TestSJF(t *testing.T) {
-func TestSJF(t *testing.T) {
+func TestSJF_Optimized(t *testing.T) {
 	sjf := NewSJF()
 
 	// testcase := []int{3, 2, -1, 5, 3, -1, -1, -1, -1, -1, 1, -1, -1, -1, -1}
+	// processes w smaller bursts keep coming in
 	testcase := []int{5, 5, 1, 1, 1, 1, 1, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}
 
 	for i := 0; i < len(testcase); i++ {
