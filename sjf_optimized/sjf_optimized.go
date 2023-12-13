@@ -1,5 +1,9 @@
 package sjf_optimized
 
+import (
+	"fmt"
+)
+
 type Process struct {
 	id          int
 	arrivalTime int //
@@ -16,6 +20,7 @@ type SJF struct {
 	totalWaitingTime       int
 	totalProcessesExecuted int
 	processes              map[int]*Process
+	clockTime              int
 }
 
 func NewSJF() *SJF {
@@ -23,6 +28,7 @@ func NewSJF() *SJF {
 	sjf.queue = make([]Process, 0)
 	sjf.processId = -1
 	sjf.processes = make(map[int]*Process)
+	sjf.clockTime = 0
 	return sjf
 }
 
@@ -34,9 +40,9 @@ func (sjf *SJF) run(process *Process, currentTime int) {
 
 	//queue = append(queue, Process{id = processId, burstTime = burstTime, arrivalTime = arrivalTime})
 
-	for _, v := range sjf.queue { //increment priority
-		sjf.processes[v.id].priority += 1
-		v.priority += 1
+	for _, v := range sjf.queue { // v = process
+		sjf.processes[v.id].priority += 1 // increment priority of each process from queue (waiting) in hashmap
+		v.priority += 1                   // increment priority field of process pointer
 	} //process := Process{id = processId, burstTime = burstTime, arrivalTime=arrivalTime}
 
 	if process != nil {
@@ -71,9 +77,9 @@ func (sjf *SJF) run(process *Process, currentTime int) {
 	if sjf.remainingTime == 0 {
 
 		if len(sjf.queue) == 0 {
-			sjf.processId = -1
+			sjf.processId = -2
 		} else {
-			THRESHOLD := 2
+			THRESHOLD := 2 // threshold of priority for processes waiting too long to be executed
 			maxProcess := sjf.queue[0]
 			maxId := -1
 			for i := 0; i < len(sjf.queue); i++ {
@@ -85,15 +91,15 @@ func (sjf *SJF) run(process *Process, currentTime int) {
 			nextJob := sjf.queue[0]
 			if maxId != -1 {
 				nextJob = sjf.queue[maxId]
-				sjf.queue = append(sjf.queue[:maxId], sjf.queue[maxId+1:]...)
+				sjf.queue = append(sjf.queue[:maxId], sjf.queue[maxId+1:]...) // exclude nextJob = pop it!
 			} else {
-				sjf.queue = sjf.queue[1:] //pop from queue
+				sjf.queue = sjf.queue[1:] // pop from queue
 			}
 
 			sjf.processId = nextJob.id
 			sjf.remainingTime = nextJob.burstTime
-			waitingTime := currentTime - nextJob.arrivalTime // nextJob.arrivalTime = start time of next job
-			sjf.processes[sjf.processId].waitingTime = waitingTime
+			waitingTime := currentTime - nextJob.arrivalTime       // nextJob.arrivalTime = its start time
+			sjf.processes[sjf.processId].waitingTime = waitingTime // update waiting time field of next process/job
 
 			sjf.totalWaitingTime += waitingTime
 			sjf.totalProcessesExecuted += 1
@@ -102,6 +108,7 @@ func (sjf *SJF) run(process *Process, currentTime int) {
 	}
 
 	sjf.remainingTime--
+	sjf.clockTime++
 
 }
 
@@ -110,10 +117,19 @@ func (sjf *SJF) getProcess() int {
 	return sjf.processId
 }
 
-func (sjf *SJF) getAvgWaitingTIme() float32 {
+func (sjf *SJF) getAvgWaitingTime() float32 {
 	return float32(sjf.totalWaitingTime) / float32(sjf.totalProcessesExecuted)
 }
 
 func (sjf *SJF) getProcessWaitingTime(processId int) int {
 	return sjf.processes[processId].waitingTime
+}
+
+func (sjf *SJF) getProcessCompletionTime(processId int) int {
+	return sjf.processes[processId].waitingTime + sjf.processes[processId].burstTime
+}
+
+func (sjf *SJF) printSummary() {
+	fmt.Println("Total waiting time = ", sjf.totalWaitingTime)
+	fmt.Println("Total jobs = ", sjf.totalProcessesExecuted)
 }
