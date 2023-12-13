@@ -33,6 +33,9 @@ func NewSJF() *SJF {
 	sjf.processId = -1
 	sjf.processes = make(map[int]*Process)
 	sjf.clockTime = 0
+	sjf.remainingTime = 0
+	sjf.totalWaitingTime = 0
+	sjf.totalProcessesExecuted = 0
 	return sjf
 }
 
@@ -42,6 +45,8 @@ func (sjf *SJF) run(process *Process, currentTime int) {
 	// 0 2 4 5 -- 0 2 2 4 5
 	// insert 3 -> 0 2 3 4 5
 	// insert a process if there is a process
+	// fmt.Println(sjf.clockTime)
+	// fmt.Println(sjf.getProcess())
 
 	if process != nil {
 		//process := Process{id = processId, burstTime = burstTime, arrivalTime=arrivalTime}
@@ -51,24 +56,28 @@ func (sjf *SJF) run(process *Process, currentTime int) {
 
 		found := false
 		// Decide where to place new process in the queue (which is the "waiting line")
+		index := -1
 		for i := 0; i < len(sjf.queue); i++ {
 			if sjf.queue[i].burstTime > process.burstTime {
 				found = true
 				// append new process to front of queue because it has smallest burstime
-				if i == 0 {
-					sjf.queue = append([]Process{*process}, sjf.queue[:]...)
+				index = i
 
-					// burstime of current process is less than the ith process,
-					// so place new process before it
-				} else {
-					sjf.queue = append(sjf.queue[:i], sjf.queue[i-1:]...)
-					sjf.queue[i] = *process
-				}
 				break
 			}
 		}
-		// in the case that queue is empty, append new process
-		if !found {
+		if found {
+			if index == 0 {
+				sjf.queue = append([]Process{*process}, sjf.queue[:]...)
+
+				// burstime of current process is less than the ith process,
+				// so place new process before it
+			} else {
+				sjf.queue = append(sjf.queue[:index], sjf.queue[index-1:]...)
+				sjf.queue[index] = *process
+			}
+		} else {
+			// in the case that queue is empty, append new process
 			sjf.queue = append(sjf.queue, *process)
 		}
 	}
@@ -78,13 +87,13 @@ func (sjf *SJF) run(process *Process, currentTime int) {
 	// check if current process finished to decide which job runs next (if any)
 	if sjf.remainingTime == 0 {
 		if len(sjf.queue) == 0 {
-			sjf.processId = -2 // no more processes to execute
+			sjf.processId = -1 // no more processes to execute
 		} else {
 			nextJob := sjf.queue[0]               // take next job from the front of queue
 			sjf.queue = sjf.queue[1:]             // pop from queue
 			sjf.processId = nextJob.id            // set nextJob to be the current process now
 			sjf.remainingTime = nextJob.burstTime // set remaining time to burstTime of new process to execute
-			waitingTime := currentTime - nextJob.arrivalTime
+			waitingTime := sjf.clockTime - nextJob.arrivalTime
 			sjf.processes[sjf.processId].waitingTime = waitingTime // update waiting time of pointers of each process
 
 			sjf.totalWaitingTime += waitingTime
@@ -93,7 +102,9 @@ func (sjf *SJF) run(process *Process, currentTime int) {
 
 	}
 
-	sjf.remainingTime--
+	if sjf.processId != -1 {
+		sjf.remainingTime--
+	}
 	sjf.clockTime++
 }
 

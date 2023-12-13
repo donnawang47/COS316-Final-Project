@@ -16,6 +16,7 @@ type SRTF struct {
 	totalWaitingTime       int
 	totalProcessesExecuted int
 	processes              map[int]*Process
+	clockTime              int
 }
 
 func NewSRTF() *SRTF {
@@ -97,7 +98,11 @@ func (srtf *SRTF) run(process *Process, currentTime int) {
 
 	}
 
-	srtf.remainingTime--
+	if srtf.processId != -1 {
+		srtf.remainingTime--
+	}
+
+	srtf.clockTime++
 
 	//
 
@@ -108,7 +113,7 @@ func (srtf *SRTF) getProcess() int {
 	return srtf.processId
 }
 
-func (srtf *SRTF) getAvgWaitingTIme() float32 {
+func (srtf *SRTF) getAvgWaitingTime() float32 {
 	return float32(srtf.totalWaitingTime) / float32(srtf.totalProcessesExecuted)
 }
 

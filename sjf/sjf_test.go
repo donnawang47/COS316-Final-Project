@@ -3,6 +3,7 @@ package sjf
 import (
 	"fmt"
 	"math"
+	"math/rand"
 	"testing"
 )
 
@@ -11,7 +12,7 @@ func scheduler(input_testcase []int, t *testing.T) float32 {
 	testcase := input_testcase
 	sjf := NewSJF()
 	i := 0                                              // keeps track of which element in testcase we are at
-	for !(sjf.processId == -2 && i > len(testcase)-1) { // there are no more proccesses left to run
+	for !(sjf.processId == -1 && i > len(testcase)-1) { // there are no more proccesses left to run
 		if i > len(testcase)-1 { // run one by one until we finish completing last job
 			sjf.run(nil, sjf.clockTime)
 		} else if testcase[i] < 0 { // run algorithm with no new job added to queue
@@ -49,26 +50,79 @@ func scheduler(input_testcase []int, t *testing.T) float32 {
 
 // func TestSJF(t *testing.T) {
 func TestSJF(t *testing.T) {
+	sjf := NewSJF()
 
 	// testcase := []int{3, 2, -1, 5, 3, -1, -1, -1, -1, -1, 1, -1, -1, -1, -1}
-	// testcase := []int{5, 5, 1, 1, 1, 1, 1, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}
-	// testcase := []int{5, -1, 3, 4, 7, -1}
-	var testcase []int
-	var avgWaitingTime float32
-	var expectedResult float32
+	testcase := []int{5, 5, 1, 1, 1, 1, 1, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}
 
-	testcase = []int{16, 10, -1, 1} // avg waiting = 9.67
-	avgWaitingTime = scheduler(testcase, t)
-	expectedResult = float32(29) / 3
-	if expectedResult != avgWaitingTime {
-		t.Errorf("Expected %2f, but got %2f for input %v", expectedResult, avgWaitingTime, testcase)
+	for i := 0; i < len(testcase); i++ {
+		//i is arrival time, testcase[i] is bursttime
+		// completion time - arrival time
+		// startime - arrival time
+		if testcase[i] == -1 {
+			sjf.run(nil, i)
+		} else {
+			sjf.run(&Process{id: i, arrivalTime: i, burstTime: testcase[i]}, i)
+		}
+		t.Errorf("%d", sjf.getProcess())
+
 	}
 
-	testcase = []int{16, 10, -1, 1, -13, 23, -10, 4} // avg waiting = 12.20
-	avgWaitingTime = scheduler(testcase, t)
-	expectedResult = float32(61) / 5
-	if expectedResult != avgWaitingTime {
-		t.Errorf("Expected %2f, but got %2f for input %v", expectedResult, avgWaitingTime, testcase)
+	for i := 0; i < len(testcase); i++ {
+		//i is arrival time, testcase[i] is bursttime
+		// completion time - arrival time
+		// startime - arrival time
+		if testcase[i] != -1 {
+			t.Errorf("%d, %d:", i, sjf.getProcessWaitingTime(i))
+
+		}
+
 	}
+
+	t.Errorf("avg waiting time: %f", sjf.getAvgWaitingTime())
+
+	//
+}
+
+func TestSJFRand(t *testing.T) {
+
+	numTestcases := 10
+	avgWaitingTime := float32(0)
+	avgOptWaitingTime := float32(0)
+	for i := 0; i < numTestcases; i++ {
+		sjf := NewSJF()
+		sjf_opt := NewSJF_OPT(120)
+		// 100 jobs total
+		//burst time range 100, waiting time in between jobs
+		for j := 0; j < 3; j++ {
+			//waiting time
+			waitingTime := rand.Intn(10)
+			//fmt.Println("waiting time", waitingTime)
+			for k := 0; k < waitingTime; k++ {
+				sjf.run(nil, sjf.clockTime)
+				sjf_opt.run(nil, sjf_opt.clockTime)
+			}
+			//burst time
+
+			sjf.run(&Process{id: j, arrivalTime: sjf.clockTime, burstTime: rand.Intn(100) + 1}, sjf.clockTime)
+			sjf_opt.run(&Process_Opt{id: j, arrivalTime: sjf_opt.clockTime, burstTime: rand.Intn(100) + 1}, sjf_opt.clockTime)
+			//fmt.Println("process", j)
+
+		}
+
+		for sjf.processId != -1 {
+			sjf.run(nil, sjf.clockTime)
+		}
+		for sjf_opt.processId != -1 {
+			sjf_opt.run(nil, sjf_opt.clockTime)
+		}
+
+		avgWaitingTime += sjf.getAvgWaitingTime()
+		avgOptWaitingTime += sjf_opt.getAvgWaitingTime()
+	}
+	fmt.Println(avgOptWaitingTime)
+
+	t.Errorf("avg waiting time: %f", avgWaitingTime/float32(numTestcases))
+	t.Errorf("avg opt waiting time: %f", avgOptWaitingTime/float32(numTestcases))
 
 }
