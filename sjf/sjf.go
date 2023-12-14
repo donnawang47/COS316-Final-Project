@@ -15,13 +15,12 @@ type Process struct {
 }
 
 type SJF struct {
-	queue                  []Process        // priority queue sorted based on burst time
-	remainingTime          int              // time left for current running process
-	processId              int              // current process identifier
-	totalWaitingTime       int              // waiting time across all processes
-	totalProcessesExecuted int              // total number of processes executed
-	processes              map[int]*Process // key: process id, value: pointer to process
-	clockTime              int              // keeps track of scheduler time
+	queue            []Process        // priority queue sorted based on burst time
+	remainingTime    int              // time left for current running process
+	processId        int              // current process identifier
+	totalWaitingTime int              // waiting time across all processes
+	processes        map[int]*Process // key: process id, value: pointer to process
+	clockTime        int              // keeps track of scheduler time
 }
 
 func NewSJF() *SJF {
@@ -79,11 +78,11 @@ func (sjf *SJF) run(process *Process, currentTime int) {
 			sjf.queue = sjf.queue[1:]             // pop from queue
 			sjf.processId = nextJob.id            // set nextJob to be the current process now
 			sjf.remainingTime = nextJob.burstTime // set remaining time to burstTime of new process to execute
-			waitingTime := sjf.clockTime - nextJob.arrivalTime
-			sjf.processes[sjf.processId].waitingTime = waitingTime // update waiting time of pointers of each process
 
+			// update waiting time
+			waitingTime := sjf.clockTime - nextJob.arrivalTime
+			sjf.processes[sjf.processId].waitingTime = waitingTime
 			sjf.totalWaitingTime += waitingTime
-			sjf.totalProcessesExecuted += 1
 		}
 
 	}
