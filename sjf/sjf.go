@@ -1,6 +1,8 @@
 /*
-Shortest job first scheduling policy: selects the waiting process with smallest execution time to execute next,
-regardless of an incoming job having a shorter estimated execution time than the job currently running.
+Shortest job first scheduling policy: selects the waiting
+process with smallest execution time to execute next,
+regardless of an incoming job having a shorter estimated
+execution time than the job currently running.
 */
 
 package sjf
@@ -13,12 +15,11 @@ type Process struct {
 	id          int // process identifier
 	arrivalTime int // time when process is included to run
 	burstTime   int // estimated amount of time for job to complete
-	// execution time = arrivaltime + bursttime
-	waitingTime int // how long each process waits from the moment they arrive until it is completed
+	waitingTime int // time each process waits until it is completed
 }
 
 type SJF struct {
-	queue                  []Process        // priority queue sorting based on burst time
+	queue                  []Process        // priority queue sorted based on burst time
 	remainingTime          int              // time left for current running process
 	processId              int              // current process identifier
 	totalWaitingTime       int              // waiting time across all processes
@@ -32,46 +33,37 @@ func NewSJF() *SJF {
 	sjf.queue = make([]Process, 0)
 	sjf.processId = -1
 	sjf.processes = make(map[int]*Process)
-	sjf.clockTime = 0
-	sjf.remainingTime = 0
-	sjf.totalWaitingTime = 0
-	sjf.totalProcessesExecuted = 0
 	return sjf
 }
 
 func (sjf *SJF) run(process *Process, currentTime int) {
-	// index 0 = smallest burst time
-	// 0 1 2 3        2
-	// 0 2 4 5 -- 0 2 2 4 5
-	// insert 3 -> 0 2 3 4 5
-	// insert a process if there is a process
-	// fmt.Println(sjf.clockTime)
-	// fmt.Println(sjf.getProcess())
 
+	// check if there is a new process to insert
 	if process != nil {
-		//process := Process{id = processId, burstTime = burstTime, arrivalTime=arrivalTime}
 
 		// insert new process into hashmap
 		sjf.processes[process.id] = process
 
-		found := false
 		// Decide where to place new process in the queue (which is the "waiting line")
+		found := false
+
 		index := -1
 		for i := 0; i < len(sjf.queue); i++ {
+			// burstime of current process is less than the ith process,
+			// so add new process at i
+			// push all remaining processes to after i
 			if sjf.queue[i].burstTime > process.burstTime {
 				found = true
-				// append new process to front of queue because it has smallest burstime
 				index = i
-
 				break
 			}
 		}
+
 		if found {
+			// check if append to front of queue
 			if index == 0 {
 				sjf.queue = append([]Process{*process}, sjf.queue[:]...)
 
-				// burstime of current process is less than the ith process,
-				// so place new process before it
 			} else {
 				sjf.queue = append(sjf.queue[:index], sjf.queue[index-1:]...)
 				sjf.queue[index] = *process
@@ -81,8 +73,6 @@ func (sjf *SJF) run(process *Process, currentTime int) {
 			sjf.queue = append(sjf.queue, *process)
 		}
 	}
-
-	// (0,1), (1,1), (1,2)
 
 	// check if current process finished to decide which job runs next (if any)
 	if sjf.remainingTime == 0 {
@@ -102,6 +92,7 @@ func (sjf *SJF) run(process *Process, currentTime int) {
 
 	}
 
+	// only decrement remaining time of scheduler if there is a running process
 	if sjf.processId != -1 {
 		sjf.remainingTime--
 	}
@@ -116,7 +107,17 @@ func (sjf *SJF) getProcess() int {
 func (sjf *SJF) getAvgWaitingTime() float32 {
 	fmt.Println("Total waiting time = ", sjf.totalWaitingTime)
 	fmt.Println("Total jobs = ", sjf.totalProcessesExecuted)
-	return float32(sjf.totalWaitingTime) / float32(sjf.totalProcessesExecuted)
+	return float32(sjf.totalWaitingTime) / float32(len(sjf.processes))
+}
+
+func (sjf *SJF) getMaxWaitingTime() int {
+	maxWaitingTime := -1
+	for _, v := range sjf.processes {
+		if v.waitingTime > maxWaitingTime {
+			maxWaitingTime = v.waitingTime
+		}
+	}
+	return maxWaitingTime
 }
 
 func (sjf *SJF) getProcessWaitingTime(processId int) int {

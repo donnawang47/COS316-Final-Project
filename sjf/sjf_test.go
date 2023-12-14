@@ -89,12 +89,18 @@ func TestSJFRand(t *testing.T) {
 	numTestcases := 10
 	avgWaitingTime := float32(0)
 	avgOptWaitingTime := float32(0)
+
+	avgMaxWaitingTime := 0
+	avgMaxOptWaitingTime := 0
+
+	avgMakespan := float32(0)
+	avgOptMakespan := float32(0)
 	for i := 0; i < numTestcases; i++ {
 		sjf := NewSJF()
-		sjf_opt := NewSJF_OPT(120)
+		sjf_opt := NewSJF_OPT(1000)
 		// 100 jobs total
 		//burst time range 100, waiting time in between jobs
-		for j := 0; j < 3; j++ {
+		for j := 0; j < 100; j++ {
 			//waiting time
 			waitingTime := rand.Intn(10)
 			//fmt.Println("waiting time", waitingTime)
@@ -103,9 +109,9 @@ func TestSJFRand(t *testing.T) {
 				sjf_opt.run(nil, sjf_opt.clockTime)
 			}
 			//burst time
-
-			sjf.run(&Process{id: j, arrivalTime: sjf.clockTime, burstTime: rand.Intn(100) + 1}, sjf.clockTime)
-			sjf_opt.run(&Process_Opt{id: j, arrivalTime: sjf_opt.clockTime, burstTime: rand.Intn(100) + 1}, sjf_opt.clockTime)
+			burstTime := rand.Intn(100) + 1
+			sjf.run(&Process{id: j, arrivalTime: sjf.clockTime, burstTime: burstTime}, sjf.clockTime)
+			sjf_opt.run(&Process_Opt{id: j, arrivalTime: sjf_opt.clockTime, burstTime: burstTime}, sjf_opt.clockTime)
 			//fmt.Println("process", j)
 
 		}
@@ -119,10 +125,22 @@ func TestSJFRand(t *testing.T) {
 
 		avgWaitingTime += sjf.getAvgWaitingTime()
 		avgOptWaitingTime += sjf_opt.getAvgWaitingTime()
+
+		avgMaxWaitingTime += sjf.getMaxWaitingTime()
+		avgMaxOptWaitingTime += sjf_opt.getMaxWaitingTime()
+
+		avgMakespan += float32(sjf.clockTime)
+		avgOptMakespan += float32(sjf_opt.clockTime)
+
 	}
 	fmt.Println(avgOptWaitingTime)
 
 	t.Errorf("avg waiting time: %f", avgWaitingTime/float32(numTestcases))
 	t.Errorf("avg opt waiting time: %f", avgOptWaitingTime/float32(numTestcases))
 
+	t.Errorf("avg max waiting time: %f", float32(avgMaxWaitingTime)/float32(numTestcases))
+	t.Errorf("avg max opt waiting time: %f", float32(avgMaxOptWaitingTime)/float32(numTestcases))
+
+	t.Errorf("avg makespan: %f", float32(avgMakespan)/float32(numTestcases))
+	t.Errorf("avg max makespan: %f", float32(avgOptMakespan)/float32(numTestcases))
 }
