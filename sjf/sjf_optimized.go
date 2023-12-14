@@ -1,9 +1,5 @@
 package sjf
 
-import (
-	"fmt"
-)
-
 type Process_Opt struct {
 	id          int // process identifier
 	arrivalTime int // time when process is included to run
@@ -13,14 +9,13 @@ type Process_Opt struct {
 }
 
 type SJF_OPT struct {
-	queue                  []Process_Opt        //priority queue sorting based on burst time
-	remainingTime          int                  // time left for current running process
-	processId              int                  // current process identifier
-	totalWaitingTime       int                  // waiting time across all processes
-	totalProcessesExecuted int                  // total number of processes executed
-	processes              map[int]*Process_Opt // key: process id, value: pointer to process
-	clockTime              int                  // keeps track of scheduler time
-	threshold              int                  // threshold to determine next process based on priority
+	queue            []Process_Opt        //priority queue sorting based on burst time
+	remainingTime    int                  // time left for current running process
+	processId        int                  // current process identifier
+	totalWaitingTime int                  // waiting time across all processes
+	processes        map[int]*Process_Opt // key: process id, value: pointer to process
+	clockTime        int                  // keeps track of scheduler time
+	threshold        int                  // threshold to determine next process based on priority
 }
 
 func NewSJF_OPT(threshold int) *SJF_OPT {
@@ -150,9 +145,4 @@ func (sjf_opt *SJF_OPT) getProcessWaitingTime(processId int) int {
 
 func (sjf_opt *SJF_OPT) getProcessCompletionTime(processId int) int {
 	return sjf_opt.processes[processId].waitingTime + sjf_opt.processes[processId].burstTime
-}
-
-func (sjf_opt *SJF_OPT) printSummary() {
-	fmt.Println("Total waiting time = ", sjf_opt.totalWaitingTime)
-	fmt.Println("Total jobs = ", sjf_opt.totalProcessesExecuted)
 }

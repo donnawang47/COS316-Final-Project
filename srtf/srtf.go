@@ -9,13 +9,12 @@ type Process struct {
 }
 
 type SRTF struct {
-	queue                  []Process        //priority queue sorting based on burst time
-	remainingTime          int              // time left for current running process
-	processId              int              // current process identifier
-	totalWaitingTime       int              // waiting time across all processes
-	totalProcessesExecuted int              // total number of processes executed
-	processes              map[int]*Process // key: process id, value: pointer to process
-	clockTime              int              // keeps track of scheduler time
+	queue            []Process        //priority queue sorting based on burst time
+	remainingTime    int              // time left for current running process
+	processId        int              // current process identifier
+	totalWaitingTime int              // waiting time across all processes
+	processes        map[int]*Process // key: process id, value: pointer to process
+	clockTime        int              // keeps track of scheduler time
 }
 
 func NewSRTF() *SRTF {
@@ -96,7 +95,6 @@ func (srtf *SRTF) run(process *Process, currentTime int) {
 			srtf.queue = srtf.queue[1:] //pop from queue
 			srtf.processId = nextJob.id
 			srtf.remainingTime = nextJob.burstTime
-			srtf.totalProcessesExecuted += 1
 		}
 
 	}

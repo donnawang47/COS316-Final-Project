@@ -7,10 +7,6 @@ execution time than the job currently running.
 
 package sjf
 
-import (
-	"fmt"
-)
-
 type Process struct {
 	id          int // process identifier
 	arrivalTime int // time when process is included to run
@@ -105,8 +101,6 @@ func (sjf *SJF) getProcess() int {
 }
 
 func (sjf *SJF) getAvgWaitingTime() float32 {
-	fmt.Println("Total waiting time = ", sjf.totalWaitingTime)
-	fmt.Println("Total jobs = ", sjf.totalProcessesExecuted)
 	return float32(sjf.totalWaitingTime) / float32(len(sjf.processes))
 }
 
@@ -121,8 +115,6 @@ func (sjf *SJF) getMaxWaitingTime() int {
 }
 
 func (sjf *SJF) getProcessWaitingTime(processId int) int {
-	// debugging (remove later)
-	fmt.Println("Arrivaltime = ", sjf.processes[processId].arrivalTime)
 	return sjf.processes[processId].waitingTime
 }
 
