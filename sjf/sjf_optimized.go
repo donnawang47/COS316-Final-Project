@@ -107,7 +107,6 @@ func (sjf_opt *SJF_OPT) run(process *Process_Opt, currentTime int) {
 			waitingTime := currentTime - nextJob.arrivalTime
 			sjf_opt.processes[sjf_opt.processId].waitingTime = waitingTime
 			sjf_opt.totalWaitingTime += waitingTime
-			sjf_opt.totalProcessesExecuted += 1
 		}
 
 	}
