@@ -1,5 +1,9 @@
 package srtf
 
+import (
+	"fmt"
+)
+
 type Process struct {
 	id            int // process identifier
 	arrivalTime   int // time when process is included to run
@@ -79,12 +83,12 @@ func (srtf *SRTF) run(process *Process, currentTime int) {
 
 	// check if current process finished to decide which job runs next (if any)
 	if srtf.remainingTime == 0 {
-
 		// calculate the current process' waiting time
 		if srtf.processId != -1 {
 			waitingTime := currentTime - srtf.processes[srtf.processId].arrivalTime - srtf.processes[srtf.processId].burstTime
 			srtf.processes[srtf.processId].waitingTime = waitingTime
 			srtf.totalWaitingTime += waitingTime
+			fmt.Printf("process total waiting: %d, id = %d", srtf.totalWaitingTime, srtf.processId)
 		}
 
 		if len(srtf.queue) == 0 {

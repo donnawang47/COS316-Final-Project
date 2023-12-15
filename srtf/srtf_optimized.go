@@ -1,5 +1,9 @@
 package srtf
 
+import (
+	"fmt"
+)
+
 type Process_Opt struct {
 	id            int // process identifier
 	arrivalTime   int // time when process is included to run
@@ -87,11 +91,13 @@ func (srtf_opt *SRTF_OPT) run(process *Process_Opt, currentTime int) {
 
 	// check if current process finished to decide which job runs next (if any)
 	if srtf_opt.remainingTime == 0 {
-
+		fmt.Println("Finish time opt: ", srtf_opt.clockTime)
 		// calculate the current process' waiting time
 		if srtf_opt.processId != -1 {
 			waitingTime := currentTime - srtf_opt.processes[srtf_opt.processId].arrivalTime - srtf_opt.processes[srtf_opt.processId].burstTime
+			fmt.Println("CHECK WAITING = ", waitingTime)
 			srtf_opt.processes[srtf_opt.processId].waitingTime = waitingTime
+			fmt.Printf("check waiting time! = %d for id = %d", srtf_opt.processes[srtf_opt.processId].waitingTime, srtf_opt.processId)
 			srtf_opt.totalWaitingTime += waitingTime
 		}
 
@@ -135,7 +141,6 @@ func (srtf_opt *SRTF_OPT) run(process *Process_Opt, currentTime int) {
 		srtf_opt.remainingTime--
 	}
 	srtf_opt.clockTime++
-
 }
 
 // get process you want to run at this time
