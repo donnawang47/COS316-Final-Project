@@ -2,88 +2,48 @@ package sjf
 
 import (
 	"fmt"
-	"math"
 	"math/rand"
 	"testing"
 )
 
-func scheduler(input_testcase []int, t *testing.T) float32 {
-	t.Log("\n", "################### TESTCASE ", input_testcase, "###################\n")
-	testcase := input_testcase
-	sjf := NewSJF()
-	i := 0                                              // keeps track of which element in testcase we are at
-	for !(sjf.processId == -1 && i > len(testcase)-1) { // there are no more proccesses left to run
-		if i > len(testcase)-1 { // run one by one until we finish completing last job
-			sjf.run(nil, sjf.clockTime)
-		} else if testcase[i] < 0 { // run algorithm with no new job added to queue
-			num := testcase[i]
-			for k := 0; k < int(math.Abs(float64(num))); k++ {
-				sjf.run(nil, sjf.clockTime)
-				t.Logf("%d", sjf.getProcess())
-			}
-		} else { // new process is to be added to queue
-			sjf.run(&Process{id: i, arrivalTime: sjf.clockTime, burstTime: testcase[i]}, sjf.clockTime)
-		}
-		t.Logf("%d", sjf.getProcess())
-		i += 1
-	}
-
-	// print waiting time for each process (waiting time saved in hashmap)
-	for i := 0; i < len(testcase); i++ {
-		if testcase[i] > 0 {
-			t.Logf("id: %d, waitingTime: %d", i, sjf.getProcessWaitingTime(i))
-			t.Logf("id: %d, completionTime: %d", i, sjf.getProcessCompletionTime(i))
-		}
-	}
-
-	fmt.Println("\n###### Summary: ######")
-	// print total time to run all jobs in the workload trace
-	fmt.Printf("Total time to run all jobs: %d\n", sjf.clockTime)
-
-	// print average waiting time across all processes for one workload trace
-	avgWaitingTime := sjf.getAvgWaitingTime()
-	fmt.Printf("Average waiting time: %f\n", avgWaitingTime)
-
-	return avgWaitingTime
-
-}
-
-// func TestSJF(t *testing.T) {
+// test used to verify that algorithm returns expected waiting time for each individual process and each process
+// is run in the correct order
 func TestSJF(t *testing.T) {
 	sjf := NewSJF()
+	sjf_opt := NewSJF_OPT(3) // threshold for priority (aging mechanism) = 3
 
-	// testcase := []int{3, 2, -1, 5, 3, -1, -1, -1, -1, -1, 1, -1, -1, -1, -1}
-	testcase := []int{5, 5, 1, 1, 1, 1, 1, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}
+	var padding_time []int
+	// negative numbers represent 1 unit time of running scheduler with no new job added to it
+	for i := 0; i < 28; i++ {
+		padding_time = append(padding_time, -1)
+	}
+
+	burstime := []int{16, 10, -1, 1}
+
+	testcase := append(burstime, padding_time...)
+	t.Log("###########  TESTCASE: , ", testcase, " ############")
 
 	for i := 0; i < len(testcase); i++ {
-		//i is arrival time, testcase[i] is bursttime
-		// completion time - arrival time
-		// startime - arrival time
 		if testcase[i] == -1 {
 			sjf.run(nil, i)
+			sjf_opt.run(nil, i)
 		} else {
 			sjf.run(&Process{id: i, arrivalTime: i, burstTime: testcase[i]}, i)
+			sjf_opt.run(&Process_Opt{id: i, arrivalTime: i, burstTime: testcase[i]}, i)
 		}
-		t.Errorf("%d", sjf.getProcess())
-
+		t.Logf("id: %d", sjf.getProcess())
+		t.Logf("id for opt: %d", sjf_opt.getProcess())
 	}
 
 	for i := 0; i < len(testcase); i++ {
-		//i is arrival time, testcase[i] is bursttime
-		// completion time - arrival time
-		// startime - arrival time
 		if testcase[i] != -1 {
-			t.Errorf("%d, %d:", i, sjf.getProcessWaitingTime(i))
-
+			t.Logf("id: %d, waiting time: %d", i, sjf.getProcessWaitingTime(i))
+			t.Logf("id: %d, waiting time for opt: %d", i, sjf_opt.getProcessWaitingTime(i))
 		}
-
 	}
-
-	t.Errorf("avg waiting time: %f", sjf.getAvgWaitingTime())
-
-	//
 }
 
+// run different trials (batches) of jobs on the scheduler and compare performance.
 func TestSJFRand(t *testing.T) {
 
 	numTestcases := 10
@@ -101,19 +61,14 @@ func TestSJFRand(t *testing.T) {
 		// 100 jobs total
 		//burst time range 100, waiting time in between jobs
 		for j := 0; j < 100; j++ {
-			//waiting time
 			waitingTime := rand.Intn(10)
-			//fmt.Println("waiting time", waitingTime)
 			for k := 0; k < waitingTime; k++ {
 				sjf.run(nil, sjf.clockTime)
 				sjf_opt.run(nil, sjf_opt.clockTime)
 			}
-			//burst time
 			burstTime := rand.Intn(100) + 1
 			sjf.run(&Process{id: j, arrivalTime: sjf.clockTime, burstTime: burstTime}, sjf.clockTime)
 			sjf_opt.run(&Process_Opt{id: j, arrivalTime: sjf_opt.clockTime, burstTime: burstTime}, sjf_opt.clockTime)
-			//fmt.Println("process", j)
-
 		}
 
 		for sjf.processId != -1 {
@@ -135,12 +90,12 @@ func TestSJFRand(t *testing.T) {
 	}
 	fmt.Println(avgOptWaitingTime)
 
-	t.Errorf("avg waiting time: %f", avgWaitingTime/float32(numTestcases))
-	t.Errorf("avg opt waiting time: %f", avgOptWaitingTime/float32(numTestcases))
+	t.Logf("avg waiting time: %f", avgWaitingTime/float32(numTestcases))
+	t.Logf("avg opt waiting time: %f", avgOptWaitingTime/float32(numTestcases))
 
-	t.Errorf("avg max waiting time: %f", float32(avgMaxWaitingTime)/float32(numTestcases))
-	t.Errorf("avg max opt waiting time: %f", float32(avgMaxOptWaitingTime)/float32(numTestcases))
+	t.Logf("avg max waiting time: %f", float32(avgMaxWaitingTime)/float32(numTestcases))
+	t.Logf("avg max opt waiting time: %f", float32(avgMaxOptWaitingTime)/float32(numTestcases))
 
-	t.Errorf("avg makespan: %f", float32(avgMakespan)/float32(numTestcases))
-	t.Errorf("avg max makespan: %f", float32(avgOptMakespan)/float32(numTestcases))
+	t.Logf("avg makespan: %f", float32(avgMakespan)/float32(numTestcases))
+	t.Logf("avg opt makespan: %f", float32(avgOptMakespan)/float32(numTestcases))
 }
